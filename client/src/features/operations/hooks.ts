@@ -1,8 +1,36 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { invalidateStockQueries } from '@/lib/queryClient'
 import type { ApiError } from '@/lib/api'
-import { operationsApi, type CreateOperationBody, type ListOperationsParams } from './api'
+import { useQueryParams } from '@/lib/hooks'
+import { invalidateStockQueries } from '@/lib/queryClient'
+import { PENDING_STATUSES, STATUS_LABELS, type OperationStatus, type OperationType } from '@/lib/types'
+import {
+  operationsApi,
+  type OperationCreateBody,
+  type OperationListParams,
+  type OperationUpdateBody,
+} from './api'
+import type { OperationFilters } from './types'
+import { parseIdParam } from './utils'
+
+export const OPERATIONS_PAGE_SIZE = 20
+
+/** What the dashboard links with: `?status=DRAFT,WAITING,READY`. */
+export const PENDING_STATUS_PARAM = PENDING_STATUSES.join(',')
+
+const ALL_STATUSES = Object.keys(STATUS_LABELS) as OperationStatus[]
+
+export type StatusTab = 'ALL' | 'PENDING' | OperationStatus
+
+export const STATUS_TABS: { value: StatusTab; label: string; param: string | null }[] = [
+  { value: 'ALL', label: 'All', param: null },
+  { value: 'PENDING', label: 'Pending', param: PENDING_STATUS_PARAM },
+  { value: 'DRAFT', label: 'Draft', param: 'DRAFT' },
+  { value: 'WAITING', label: 'Waiting', param: 'WAITING' },
+  { value: 'READY', label: 'Ready', param: 'READY' },
+  { value: 'DONE', label: 'Done', param: 'DONE' },
+  { value: 'CANCELED', label: 'Canceled', param: 'CANCELED' },
+]
 
 // ---------------------------------------------------------------------------
 // Query keys
@@ -11,19 +39,91 @@ import { operationsApi, type CreateOperationBody, type ListOperationsParams } fr
 export const operationKeys = {
   all: ['operations'] as const,
   lists: () => [...operationKeys.all, 'list'] as const,
-  list: (params: ListOperationsParams) => [...operationKeys.lists(), params] as const,
+  list: (params: OperationListParams) => [...operationKeys.lists(), params] as const,
   details: () => [...operationKeys.all, 'detail'] as const,
   detail: (id: number) => [...operationKeys.details(), id] as const,
+}
+
+// ---------------------------------------------------------------------------
+// URL state (CONTRACT §6.7)
+// ---------------------------------------------------------------------------
+
+/** `status=DRAFT,WAITING,READY` → the three statuses. */
+export function parseStatusParam(value: string | undefined): OperationStatus[] | undefined {
+  if (!value) return undefined
+  const parsed = value
+    .split(',')
+    .map((part) => part.trim().toUpperCase())
+    .filter((part): part is OperationStatus => ALL_STATUSES.includes(part as OperationStatus))
+  const unique = Array.from(new Set(parsed))
+  return unique.length > 0 ? unique : undefined
+}
+
+/** The tab that matches the `status` param; `All` also covers unknown combos. */
+export function statusTabFromParam(value: string | undefined): StatusTab {
+  const statuses = parseStatusParam(value)
+  if (!statuses) return 'ALL'
+  if (statuses.length === PENDING_STATUSES.length && PENDING_STATUSES.every((s) => statuses.includes(s))) {
+    return 'PENDING'
+  }
+  return statuses.length === 1 ? statuses[0] : 'ALL'
+}
+
+export type OperationFilterPatch = {
+  search?: string | null
+  warehouseId?: number | null
+}
+
+export function useOperationFilters(): {
+  filters: OperationFilters
+  statusTab: StatusTab
+  page: number
+  hasFilters: boolean
+  setStatusTab: (tab: StatusTab) => void
+  setFilters: (patch: OperationFilterPatch) => void
+  setPage: (page: number) => void
+  clearFilters: () => void
+} {
+  const [params, setParams] = useQueryParams()
+  const filters: OperationFilters = {
+    search: params.search?.trim() || undefined,
+    warehouseId: parseIdParam(params.warehouseId),
+    status: parseStatusParam(params.status),
+  }
+
+  return {
+    filters,
+    statusTab: statusTabFromParam(params.status),
+    page: parseIdParam(params.page) ?? 1,
+    hasFilters: Boolean(filters.search || filters.warehouseId || filters.status),
+    // Any filter change starts again from page 1.
+    setStatusTab: (tab) => {
+      const entry = STATUS_TABS.find((candidate) => candidate.value === tab)
+      setParams({ status: entry?.param ?? null, page: null })
+    },
+    setFilters: (patch) => setParams({ ...patch, page: null }),
+    setPage: (page) => setParams({ page: page > 1 ? page : null }),
+    clearFilters: () => setParams({ search: null, warehouseId: null, status: null, page: null }),
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Queries
 // ---------------------------------------------------------------------------
 
-export function useOperations(params: ListOperationsParams) {
+export function useOperations(type: OperationType, filters: OperationFilters, page: number) {
+  const params: OperationListParams = {
+    type,
+    status: filters.status,
+    warehouseId: filters.warehouseId,
+    search: filters.search,
+    page,
+    pageSize: OPERATIONS_PAGE_SIZE,
+  }
   return useQuery({
     queryKey: operationKeys.list(params),
     queryFn: () => operationsApi.list(params),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -39,93 +139,96 @@ export function useOperation(id: number) {
 // Mutations
 // ---------------------------------------------------------------------------
 
+function useInvalidateOperation() {
+  const queryClient = useQueryClient()
+  return (id: number): void => {
+    void queryClient.invalidateQueries({ queryKey: operationKeys.lists() })
+    void queryClient.invalidateQueries({ queryKey: operationKeys.detail(id) })
+  }
+}
+
 export function useCreateOperation() {
-  const qc = useQueryClient()
+  const invalidate = useInvalidateOperation()
   return useMutation({
-    mutationFn: (body: CreateOperationBody) => operationsApi.create(body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: operationKeys.lists() })
-    },
+    mutationFn: (body: OperationCreateBody) => operationsApi.create(body),
+    onSuccess: (operation) => invalidate(operation.id),
   })
 }
 
-export function useUpdateOperation(id: number) {
-  const qc = useQueryClient()
+export function useUpdateOperation() {
+  const invalidate = useInvalidateOperation()
   return useMutation({
-    mutationFn: (body: Omit<CreateOperationBody, 'type'> & { type?: string }) =>
+    mutationFn: ({ id, body }: { id: number; body: OperationUpdateBody }) =>
       operationsApi.update(id, body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: operationKeys.lists() })
-      qc.invalidateQueries({ queryKey: operationKeys.detail(id) })
-    },
+    onSuccess: (operation) => invalidate(operation.id),
   })
 }
 
 export function useDeleteOperation() {
-  const qc = useQueryClient()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => operationsApi.delete(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: operationKeys.lists() })
+    onSuccess: (_result, id) => {
+      queryClient.removeQueries({ queryKey: operationKeys.detail(id) })
+      void queryClient.invalidateQueries({ queryKey: operationKeys.lists() })
     },
   })
 }
 
-export function useConfirmOperation(id: number) {
-  const qc = useQueryClient()
+export function useConfirmOperation() {
+  const invalidate = useInvalidateOperation()
   return useMutation({
-    mutationFn: () => operationsApi.confirm(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: operationKeys.detail(id) })
-      qc.invalidateQueries({ queryKey: operationKeys.lists() })
+    mutationFn: (id: number) => operationsApi.confirm(id),
+    onSuccess: (operation) => {
+      invalidate(operation.id)
+      toast.success(
+        operation.status === 'WAITING'
+          ? 'Confirmed. Not enough stock at the source yet, so it is waiting.'
+          : 'Confirmed. Ready to validate.',
+      )
     },
-    onError: (err: ApiError) => {
-      toast.error(err.message)
-    },
+    onError: (error: ApiError) => toast.error(error.message),
   })
 }
 
-export function useCheckAvailability(id: number) {
-  const qc = useQueryClient()
+export function useCheckAvailability() {
+  const invalidate = useInvalidateOperation()
   return useMutation({
-    mutationFn: () => operationsApi.checkAvailability(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: operationKeys.detail(id) })
-      qc.invalidateQueries({ queryKey: operationKeys.lists() })
+    mutationFn: (id: number) => operationsApi.checkAvailability(id),
+    onSuccess: (operation) => {
+      invalidate(operation.id)
+      if (operation.status === 'READY') toast.success('Stock is available. Ready to validate.')
+      else toast.warning('Still short on stock at the source.')
     },
-    onError: (err: ApiError) => {
-      toast.error(err.message)
-    },
+    onError: (error: ApiError) => toast.error(error.message),
   })
 }
 
-export function useValidateOperation(id: number) {
-  const qc = useQueryClient()
+export function useValidateOperation() {
+  const invalidate = useInvalidateOperation()
   return useMutation({
-    mutationFn: () => operationsApi.validate(id),
-    onSuccess: async () => {
+    mutationFn: (id: number) => operationsApi.validate(id),
+    onSuccess: async (operation) => {
+      invalidate(operation.id)
       toast.success('Validated. Stock updated.')
       await invalidateStockQueries()
-      qc.invalidateQueries({ queryKey: operationKeys.detail(id) })
-      qc.invalidateQueries({ queryKey: operationKeys.lists() })
     },
-    onError: (err: ApiError) => {
-      toast.error(err.message)
-      qc.invalidateQueries({ queryKey: operationKeys.detail(id) })
+    onError: (error: ApiError, id) => {
+      // 409 INSUFFICIENT_STOCK / INVALID_STATE: the server message is the explanation.
+      toast.error(error.message)
+      invalidate(id)
     },
   })
 }
 
-export function useCancelOperation(id: number) {
-  const qc = useQueryClient()
+export function useCancelOperation() {
+  const invalidate = useInvalidateOperation()
   return useMutation({
-    mutationFn: () => operationsApi.cancel(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: operationKeys.detail(id) })
-      qc.invalidateQueries({ queryKey: operationKeys.lists() })
+    mutationFn: (id: number) => operationsApi.cancel(id),
+    onSuccess: (operation) => {
+      invalidate(operation.id)
+      toast.success('Canceled. No stock was changed.')
     },
-    onError: (err: ApiError) => {
-      toast.error(err.message)
-    },
+    onError: (error: ApiError) => toast.error(error.message),
   })
 }
