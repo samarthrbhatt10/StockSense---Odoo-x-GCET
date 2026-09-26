@@ -1,15 +1,24 @@
 import type { OperationStatus, OperationType } from '@/lib/types'
 
 // ---------------------------------------------------------------------------
-// Server response shapes (mirror server/src/modules/operations/service.ts)
+// Server response shapes
+// (mirror server/src/modules/operations/service.ts → formatSummary/formatDetail)
 // ---------------------------------------------------------------------------
+
+export interface OperationProductRef {
+  id: number
+  name: string
+  sku: string
+  uom: string
+}
 
 export interface OperationLine {
   id: number
   productId: number
-  product: { id: number; name: string; sku: string; uom: string }
+  product: OperationProductRef
   quantity: number
   countedQuantity: number | null
+  /** Live on hand at the source (deliveries/transfers) or the counted location (adjustments). */
   available: number | null
 }
 
@@ -48,23 +57,12 @@ export interface Operation extends OperationSummary {
 }
 
 // ---------------------------------------------------------------------------
-// Form input types
+// List filters, mirrored in the URL (CONTRACT §6.7)
 // ---------------------------------------------------------------------------
 
-export interface LineInput {
-  productId: number
-  productName: string
-  productSku: string
-  productUom: string
-  quantity: number
-  countedQuantity: number
-}
-
-export interface OperationFormValues {
-  partnerName: string
-  sourceLocationId: number | null
-  destLocationId: number | null
-  scheduledDate: string
-  notes: string
-  lines: LineInput[]
+export interface OperationFilters {
+  /** Comma list in the URL, an array in code. */
+  status?: OperationStatus[]
+  warehouseId?: number
+  search?: string
 }

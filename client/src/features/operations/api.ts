@@ -1,34 +1,38 @@
 import { api, type QueryParams } from '@/lib/api'
-import type { ListMeta } from '@/lib/types'
+import type { ListMeta, OperationStatus, OperationType } from '@/lib/types'
 import type { Operation, OperationSummary } from './types'
 
-export interface ListOperationsParams extends QueryParams {
+export interface OperationListParams extends QueryParams {
   page?: number
   pageSize?: number
-  type?: string
-  status?: string
+  type?: OperationType
+  status?: OperationStatus[]
   warehouseId?: number
   search?: string
   dateFrom?: string
   dateTo?: string
 }
 
-export interface CreateOperationBody {
-  type: string
+export interface OperationLineBody {
+  productId: number
+  quantity?: number
+  countedQuantity?: number
+}
+
+export interface OperationCreateBody {
+  type: OperationType
   sourceLocationId?: number
   destLocationId?: number
   partnerName?: string
   scheduledDate?: string
   notes?: string
-  lines: Array<{
-    productId: number
-    quantity?: number
-    countedQuantity?: number
-  }>
+  lines: OperationLineBody[]
 }
 
+export type OperationUpdateBody = Omit<OperationCreateBody, 'type'> & { type?: OperationType }
+
 export const operationsApi = {
-  list(params: ListOperationsParams): Promise<{ items: OperationSummary[]; meta: ListMeta }> {
+  list(params: OperationListParams): Promise<{ items: OperationSummary[]; meta: ListMeta }> {
     return api.list<OperationSummary>('/operations', params)
   },
 
@@ -36,11 +40,11 @@ export const operationsApi = {
     return api.get<Operation>(`/operations/${id}`)
   },
 
-  create(body: CreateOperationBody): Promise<Operation> {
+  create(body: OperationCreateBody): Promise<Operation> {
     return api.post<Operation>('/operations', body)
   },
 
-  update(id: number, body: Omit<CreateOperationBody, 'type'> & { type?: string }): Promise<Operation> {
+  update(id: number, body: OperationUpdateBody): Promise<Operation> {
     return api.put<Operation>(`/operations/${id}`, body)
   },
 
