@@ -33,7 +33,9 @@ export default function OperationFormPage() {
   const { kind, id } = useParams()
   const resolved = resolveKind(kind)
   if (!resolved) return <NotFoundPage />
-  if (resolved.config.type === 'ADJUSTMENT') return <AdjustmentForm kind={resolved.kind} id={id} />
+  if (resolved.config.type === 'ADJUSTMENT') {
+    return <AdjustmentForm kind={resolved.kind} id={id} />
+  }
 
   return <OperationForm kind={resolved.kind} config={resolved.config} id={id} />
 }
@@ -325,7 +327,7 @@ function OperationForm({
           </CardContent>
         </Card>
 
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+        <div className="sticky bottom-0 z-10 -mx-4 flex flex-col-reverse gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:flex-row sm:items-center sm:justify-end sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
           <Button
             type="submit"
             variant="outline"

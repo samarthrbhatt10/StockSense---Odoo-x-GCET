@@ -88,7 +88,7 @@ export function OperationActions({
         {operation.status === 'DRAFT' ? (
           <>
             <Button variant="outline" asChild disabled={anyPending}>
-              <Link to={`/operations/${kind}/${operation.id}/edit`}>
+              <Link to={`/operations/${kind}/${operation.id}/edit${window.location.search}`}>
                 <PencilIcon />
                 Edit
               </Link>
@@ -191,7 +191,7 @@ export function OperationActions({
           remove.mutate(operation.id, {
             onSuccess: () => {
               toast.success('Draft deleted.')
-              navigate(`/operations/${kind}`, { replace: true })
+              navigate(`/operations/${kind}${window.location.search}`, { replace: true })
             },
             onSettled: () => setDialog(null),
           })
