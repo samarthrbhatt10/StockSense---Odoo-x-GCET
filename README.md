@@ -16,11 +16,16 @@ StockSense is a multi-warehouse inventory management system built in 8 hours for
 | **Receipts** | Vendor → internal location. Draft → Ready → Done workflow with supplier, scheduled date, notes and multiple product lines. References like `WH/IN/0001`. | Operations → Receipts |
 | **Deliveries (pick / pack / validate)** | Internal location → customer. Confirm checks availability (Ready or Waiting). "Check availability" re-tests Waiting orders. A Pick → Pack checklist must be ticked before Validate is enabled. Each line shows live on-hand at the source. | Operations → Delivery Orders |
 | **Internal transfers** | Internal → internal location, within or across warehouses, with the same availability check and atomic validation. | Operations → Internal Transfers |
-| **Adjustments** | The API is complete. You send a counted quantity, the system records the book quantity at validation and writes only the difference (gain or loss) against the virtual "Inventory Adjustment" location. Adjustments are listed and viewable in the UI. *The create/edit form and the recorded-vs-counted view in the UI are **planned** (P2-C, in progress).* | Operations → Adjustments |
+| **Adjustments** | Pick a location and products (or "Count all products here"). Each line shows the recorded quantity; you enter what you counted and see the difference. On validation the system records the book quantity at that moment and writes only the difference (gain or loss) against the virtual "Inventory Adjustment" location. | Operations → Adjustments |
 | **Move history** | The full stock ledger, filterable by product, location, warehouse, operation type, text search and date range. Paginated, with CSV export. Each row shows direction (in/out), from → to and who did it. | Operations → Move History (`/moves`) |
 | **Low-stock alerts** | A top-bar bell with a live count (refreshes every minute). The alerts page lists each product below its per-warehouse minimum or out of stock, with a suggested reorder quantity and a "Create receipt" button that opens a pre-filled receipt. | Bell icon, Products → Low Stock (`/alerts`) |
 | **Multi-warehouse** | Warehouses and their locations (manager CRUD, staff view-only). Reorder rules and references are per warehouse, and every list, KPI and alert can be scoped to one warehouse. | Settings → Warehouses / Locations |
 | **SKU search** | Global search (`Ctrl K` / `⌘K`) finds products by name or SKU and operations by reference or partner, and jumps straight to them. | Search box in the top bar |
+
+### Known issues (fixes pending)
+
+- **Adding a product line by hand in a new receipt, delivery or transfer doesn't stick.** Forms opened with a pre-filled product (the product page's *Receive* / *Deliver* quick actions, the alerts page's *Create receipt*, or `?productId=…&quantity=…&locationId=…`) work. The adjustment form is not affected.
+- **The last step of password reset fails.** The code is sent and verified, but *Update password* is rejected because the verified code isn't sent with the new password. Changing your password from **My Profile** works.
 
 ---
 

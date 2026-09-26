@@ -11,12 +11,20 @@ Exact clicks, and what to say while doing them. Numbers assume a **freshly seede
    - **Office Chair** (`FUR-CHAIR`): 6 at `WH/Rack B`, minimum 10 → **Low stock**.
    - **Steel** (`STL-KG`): 77 kg at `WH/Production Floor`, after the brief's own flow (100 in → transfer → 20 out → −3 adjustment).
    - **`WH/OUT/0006`**: a *Ready* delivery of 10 Steel Rods from `WH/Rack A` to BuildRight Infra. We use it in step 5a.
+4. Every **Validate** opens a confirmation dialog that says exactly what will move. Click **Validate** again in the dialog.
+
+> ⚠️ **Known issue (until the operations product-picker fix lands):** picking a product in a *new* receipt, delivery or transfer form doesn't stick. Open those forms from the product page's **Receive** / **Deliver** quick actions, or from the pre-filled URLs below; the product line is then already filled. The adjustment form's picker works.
+> - Receipt: `/operations/receipts/new?productId=2&quantity=50&locationId=1` (Steel Rods × 50 → WH/Stock)
+> - Transfer: `/operations/transfers/new?productId=2&quantity=5&locationId=1` (from WH/Stock)
+> - Delivery: `/operations/deliveries/new?productId=6&quantity=10&locationId=1` (Office Chair from WH/Stock)
+>
+> With this workaround a document holds one product, so receive the 20 Office Chairs as a second receipt (`productId=6&quantity=20&locationId=1`).
 
 ---
 
 ## 1. Log in (0:00, 15 s)
 
-1. On `/login`, enter `manager@stocksense.local` / `Manager@123` → **Log in**.
+1. On `/login`, enter `manager@stocksense.local` / `Manager@123` → **Sign in**.
 
 > "StockSense is an inventory system for a multi-warehouse business. I'm logged in as a manager; there's also a staff role we'll see later."
 
@@ -55,11 +63,9 @@ Exact clicks, and what to say while doing them. Numbers assume a **freshly seede
 
 **d. Adjust Steel for 3 damaged units**
 1. **Operations → Adjustments** → **New Inventory Adjustment**.
-2. Location: **WH/Production Floor**. Line: **Steel**, counted `74` (system shows 77).
-3. **Save & confirm** → **Validate** → Done. Steel is now **74 kg**.
+2. Counted location: **WH/Production Floor**. **Add product** → **Steel**: the line shows *Recorded 77 kg*. Set **Counted** to `74`; *Difference* shows **−3 kg**. Reason: `3 kg damaged`.
+3. **Save & confirm** (`WH/ADJ/0002`) → **Validate** → Done. Steel is now **74 kg**, and the document lists its stock move: Production Floor → Inventory Adjustment, 3.
    > "You enter what you counted. The system records what it expected and writes only the difference, 3 kg, to the virtual Inventory Adjustment location."
-
-> ⚠️ **Fallback if the adjustment form isn't available:** the adjustment form is part of P2-C and may not be merged when you demo. In that case, skip the three clicks. Say "here's the one the seed already recorded" and show row `WH/ADJ/0001` (3 kg, Production Floor → Inventory Adjustment) in step 4. Steel then stays at 77 kg.
 
 ## 4. Move History: "every change is a ledger row" (2:55, 25 s)
 
@@ -71,14 +77,14 @@ Exact clicks, and what to say while doing them. Numbers assume a **freshly seede
 ## 5. Safeguards (3:20, 55 s)
 
 **a. A delivery that exceeds stock → clear 409, nothing changes**
-1. **Delivery Orders** → **New Delivery Order**. Source **WH/Rack A**, line **Steel Rods** `25` (available 30) → **Save & confirm** → tick both boxes → **Validate** → Done. Rack A now has **5**.
-2. Back to **Delivery Orders** → open **`WH/OUT/0006`** (BuildRight Infra, 10 Steel Rods, *Ready* since yesterday).
-3. Tick **Items picked** + **Items packed** → **Validate**.
+1. **Delivery Orders** → **New Delivery Order**. Source **WH/Rack A**, line **Steel Rods** `25` (available 30) → **Save & confirm** → tick both boxes → **Validate** → Done. Rack A now has **5**. (Picker workaround: `/operations/deliveries/new?productId=2&quantity=25&locationId=2`.)
+2. Back to **Delivery Orders** → open **`WH/OUT/0006`** (BuildRight Infra, 10 Steel Rods, *Ready* since yesterday). The line already warns **"5 Units · not enough"**.
+3. Tick **Items picked** + **Items packed** → **Validate** → confirm.
 4. The toast reads: **"Not enough STL-ROD at WH/Rack A: available 5, requested 10"**. The status is still **Ready**; open Steel Rods and nothing moved.
    > "Ready doesn't reserve stock, so someone else can ship it first. Validation re-checks inside one database transaction with a conditional decrement: all lines succeed or none do. Double-clicking Validate can't count twice either, because the second click finds the order is no longer Ready."
 
 **b. Delete a product with history → "deactivate instead"**
-1. **Products → All Products** → **Steel** → **Delete** → confirm.
+1. **Products → All Products** → **Steel** → **Delete** → **Delete product** in the dialog.
 2. The toast reads: **"This product has stock history. Deactivate it instead."**
    > "The ledger is never rewritten. Old products are deactivated and disappear from pickers."
 
@@ -104,6 +110,8 @@ Exact clicks, and what to say while doing them. Numbers assume a **freshly seede
 2. Show the server terminal: the `EMAIL (StockSense)` block with the **6-digit code**.
    > "No SMTP configured, so emails print to the console. Set SMTP_HOST and the same code goes out by email. Codes are hashed, expire in 10 minutes and allow 5 attempts."
 3. Enter the code → **Verify code** → set a new password → **Update password** → log in with it. (Use the staff account so the manager login stays valid.)
+
+> ⚠️ **Known issue (until the auth fix lands):** **Update password** currently fails with "otp: Enter the 6-digit code", because the page doesn't keep the verified code for the last step. Stop the demo after **Verify code** succeeds and say "then you set the new password".
 
 ---
 
