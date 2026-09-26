@@ -1,0 +1,222 @@
+// StockSense — FROZEN schema. Do not edit after Checkpoint 0.
+// Semantics are documented in docs/CONTRACT.md §3.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MANAGER
+  STAFF
+}
+
+enum LocationType {
+  INTERNAL
+  VENDOR
+  CUSTOMER
+  ADJUSTMENT
+}
+
+enum OperationType {
+  RECEIPT
+  DELIVERY
+  INTERNAL
+  ADJUSTMENT
+}
+
+enum OperationStatus {
+  DRAFT
+  WAITING
+  READY
+  DONE
+  CANCELED
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STAFF)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  resetOtps  PasswordResetOtp[]
+  operations Operation[]
+  stockMoves StockMove[]
+}
+
+model PasswordResetOtp {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  codeHash  String
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Warehouse {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String   @unique
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  locations    Location[]
+  reorderRules ReorderRule[]
+}
+
+model Location {
+  id          Int          @id @default(autoincrement())
+  name        String
+  type        LocationType @default(INTERNAL)
+  warehouseId Int?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  warehouse        Warehouse?   @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  quants           StockQuant[]
+  sourceOperations Operation[]  @relation("OperationSource")
+  destOperations   Operation[]  @relation("OperationDest")
+  movesFrom        StockMove[]  @relation("MoveFrom")
+  movesTo          StockMove[]  @relation("MoveTo")
+
+  @@unique([warehouseId, name])
+  @@index([type])
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id         Int      @id @default(autoincrement())
+  name       String
+  sku        String   @unique
+  uom        String   @default("Units")
+  categoryId Int?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  quants         StockQuant[]
+  reorderRules   ReorderRule[]
+  operationLines OperationLine[]
+  stockMoves     StockMove[]
+
+  @@index([name])
+  @@index([categoryId])
+}
+
+model StockQuant {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  locationId Int
+  quantity   Float    @default(0)
+  updatedAt  DateTime @updatedAt
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@unique([productId, locationId])
+  @@index([locationId])
+}
+
+model ReorderRule {
+  id          Int      @id @default(autoincrement())
+  productId   Int
+  warehouseId Int
+  minQty      Float
+  maxQty      Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, warehouseId])
+}
+
+model Operation {
+  id               Int             @id @default(autoincrement())
+  reference        String          @unique
+  type             OperationType
+  status           OperationStatus @default(DRAFT)
+  sourceLocationId Int
+  destLocationId   Int
+  partnerName      String?
+  scheduledDate    DateTime        @default(now())
+  doneAt           DateTime?
+  notes            String?
+  createdById      Int
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  sourceLocation Location        @relation("OperationSource", fields: [sourceLocationId], references: [id])
+  destLocation   Location        @relation("OperationDest", fields: [destLocationId], references: [id])
+  createdBy      User            @relation(fields: [createdById], references: [id])
+  lines          OperationLine[]
+  moves          StockMove[]
+
+  @@index([type, status])
+  @@index([scheduledDate])
+}
+
+model OperationLine {
+  id              Int    @id @default(autoincrement())
+  operationId     Int
+  productId       Int
+  quantity        Float  @default(0)
+  countedQuantity Float?
+
+  operation Operation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id])
+
+  @@unique([operationId, productId])
+}
+
+model StockMove {
+  id             Int           @id @default(autoincrement())
+  productId      Int
+  fromLocationId Int
+  toLocationId   Int
+  quantity       Float
+  type           OperationType
+  reference      String
+  operationId    Int?
+  createdById    Int
+  createdAt      DateTime      @default(now())
+
+  product      Product    @relation(fields: [productId], references: [id])
+  fromLocation Location   @relation("MoveFrom", fields: [fromLocationId], references: [id])
+  toLocation   Location   @relation("MoveTo", fields: [toLocationId], references: [id])
+  operation    Operation? @relation(fields: [operationId], references: [id])
+  createdBy    User       @relation(fields: [createdById], references: [id])
+
+  @@index([productId])
+  @@index([createdAt])
+  @@index([operationId])
+}
+
+model Sequence {
+  key  String @id
+  next Int    @default(1)
+}

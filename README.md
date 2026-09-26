@@ -1,37 +1,9 @@
-# StockSense 📦
+# StockSense
 
-A modular Inventory Management System (IMS) designed to digitize and streamline stock operations, replacing manual registers and spreadsheets with real-time tracking.
+Inventory management system: Odoo Hackathon 2026.
 
----
+This README is a placeholder. Person 3 replaces it during the final integration step (`docs/prompts/P3-C-integration.md`).
 
-## 🚀 Features
-
-### 🔐 Authentication & Access
-* **User Authentication**: Secure Signup and Login workflows[cite: 1].
-* **Password Reset**: OTP-based identity verification for password recovery[cite: 1].
-* **Role-Based Access**: Tailored for Inventory Managers and Warehouse Staff[cite: 1].
-
-### 📊 Interactive Dashboard & Analytics
-* **Key Performance Indicators (KPIs)**:
-  * Total Products in Stock[cite: 1]
-  * Low Stock / Out of Stock Items[cite: 1]
-  * Pending Receipts & Pending Deliveries[cite: 1]
-  * Internal Transfers Scheduled[cite: 1]
-* **Dynamic Filters**: Filter operations by Document Type (Receipts, Delivery, Internal, Adjustments), Status (Draft, Waiting, Ready, Done, Canceled), Warehouse/Location, and Product Category[cite: 1].
-
-### 📦 Core Inventory Operations
-* **Product Management**: Create and track products with SKU/Code, Category, Unit of Measure, and Initial Stock[cite: 1].
-* **Receipts (Incoming Stock)**: Process inbound vendor shipments with automatic stock increments upon validation[cite: 1].
-* **Delivery Orders (Outgoing Stock)**: Manage picking, packing, and outbound shipments with automatic stock decrements[cite: 1].
-* **Internal Transfers**: Log stock movements between internal locations (e.g., Main Warehouse → Production Floor)[cite: 1].
-* **Stock Adjustments**: Reconcile physical inventory counts with system records, logging discrepancies automatically in the Stock Ledger[cite: 1].
-* **Multi-Warehouse Support & Reordering Rules**: Track inventory levels across multiple warehouses and set low-stock automated alerts[cite: 1].
-
----
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone [https://github.com/samarthrbhatt10/StockSense.git](https://github.com/samarthrbhatt10/StockSense.git)
-   cd StockSense
+- Rules for AI agents: `AGENTS.md`
+- Shared contract: `docs/CONTRACT.md`
+- Team runbook and prompts: `docs/prompts/00-HOW-TO-USE.md`
