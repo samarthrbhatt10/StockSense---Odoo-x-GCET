@@ -25,6 +25,7 @@ export default function GlobalSearch() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
+  const [highlighted, setHighlighted] = useState('')
   const q = useDebouncedValue(text.trim(), DEBOUNCE_MS)
   const results = useGlobalSearch(q)
   const shortcut = isMacPlatform() ? '⌘K' : 'Ctrl K'
@@ -52,6 +53,16 @@ export default function GlobalSearch() {
   const data = q ? results.data : undefined
   const hasResults = Boolean(data && (data.products.length > 0 || data.operations.length > 0))
   const waiting = text.trim() !== q || (results.isFetching && !hasResults)
+
+  // cmdk keeps pointing at the old item when results are replaced, so Enter would do nothing.
+  // Keep the highlight only while it is still in the results; otherwise use the first one.
+  const itemValues = data
+    ? [
+        ...data.products.map((product) => `product-${product.id}`),
+        ...data.operations.map((operation) => `operation-${operation.id}`),
+      ]
+    : []
+  const activeValue = itemValues.includes(highlighted) ? highlighted : (itemValues[0] ?? '')
 
   return (
     <>
@@ -85,7 +96,7 @@ export default function GlobalSearch() {
           title="Search"
           description="Search products by SKU or name, and operations by reference or partner"
         >
-          <Command shouldFilter={false}>
+          <Command shouldFilter={false} value={activeValue} onValueChange={setHighlighted}>
             <CommandInput
               value={text}
               onValueChange={(value) => setText(value.slice(0, MAX_QUERY_LENGTH))}
