@@ -1,0 +1,48 @@
+[1mdiff --git a/server/package-lock.json b/server/package-lock.json[m
+[1mindex d2e4f9e..1cc0a81 100644[m
+[1m--- a/server/package-lock.json[m
+[1m+++ b/server/package-lock.json[m
+[36m@@ -13,6 +13,7 @@[m
+         "express": "^5.2.1",[m
+         "jsonwebtoken": "^9.0.3",[m
+         "nodemailer": "^10.0.10",[m
+[32m+[m[32m        "stocksense": "file:..",[m
+         "zod": "^3.25.76"[m
+       },[m
+       "devDependencies": {[m
+[36m@@ -25,6 +26,12 @@[m
+         "typescript": "~6.0"[m
+       }[m
+     },[m
+[32m+[m[32m    "..": {[m
+[32m+[m[32m      "name": "stocksense",[m
+[32m+[m[32m      "devDependencies": {[m
+[32m+[m[32m        "concurrently": "^10.0.5"[m
+[32m+[m[32m      }[m
+[32m+[m[32m    },[m
+     "node_modules/@esbuild/aix-ppc64": {[m
+       "version": "0.28.2",[m
+       "resolved": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.28.2.tgz",[m
+[36m@@ -2045,6 +2052,10 @@[m
+         "node": ">= 0.8"[m
+       }[m
+     },[m
+[32m+[m[32m    "node_modules/stocksense": {[m
+[32m+[m[32m      "resolved": "..",[m
+[32m+[m[32m      "link": true[m
+[32m+[m[32m    },[m
+     "node_modules/tinyexec": {[m
+       "version": "1.3.1",[m
+       "resolved": "https://registry.npmjs.org/tinyexec/-/tinyexec-1.3.1.tgz",[m
+[1mdiff --git a/server/package.json b/server/package.json[m
+[1mindex 45e9b2e..37fce0c 100644[m
+[1m--- a/server/package.json[m
+[1m+++ b/server/package.json[m
+[36m@@ -22,6 +22,7 @@[m
+     "express": "^5.2.1",[m
+     "jsonwebtoken": "^9.0.3",[m
+     "nodemailer": "^10.0.10",[m
+[32m+[m[32m    "stocksense": "file:..",[m
+     "zod": "^3.25.76"[m
+   },[m
+   "devDependencies": {[m
