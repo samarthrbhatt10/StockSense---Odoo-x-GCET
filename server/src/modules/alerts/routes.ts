@@ -1,10 +1,14 @@
 import { Router } from "express";
-import { AppError } from "../../lib/http";
+import { ok } from "../../lib/http";
+import { parse } from "../../lib/validate";
+import { lowStockQuerySchema } from "./schemas";
+import * as alertsService from "./service";
 
 const router = Router();
 
-router.get("/", () => {
-  throw new AppError(501, "NOT_IMPLEMENTED", "Alerts is not implemented yet");
+router.get("/low-stock", async (req, res) => {
+  const query = parse(lowStockQuerySchema, req.query);
+  ok(res, await alertsService.getLowStock(query));
 });
 
 export default router;

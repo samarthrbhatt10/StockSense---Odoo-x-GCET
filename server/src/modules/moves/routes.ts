@@ -1,10 +1,15 @@
 import { Router } from "express";
-import { AppError } from "../../lib/http";
+import { list } from "../../lib/http";
+import { parse } from "../../lib/validate";
+import { movesQuerySchema } from "./schemas";
+import * as movesService from "./service";
 
 const router = Router();
 
-router.get("/", () => {
-  throw new AppError(501, "NOT_IMPLEMENTED", "Moves is not implemented yet");
+router.get("/", async (req, res) => {
+  const query = parse(movesQuerySchema, req.query);
+  const { items, meta } = await movesService.listMoves(query);
+  list(res, items, meta);
 });
 
 export default router;
