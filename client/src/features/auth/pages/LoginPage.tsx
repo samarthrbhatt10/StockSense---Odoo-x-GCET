@@ -1,27 +1,32 @@
-import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { LoaderCircleIcon } from 'lucide-react'
-import { api, ApiError } from '@/lib/api'
-import { emailSchema } from '@/lib/validation'
-import { useAuth } from '@/app/AuthProvider'
-import type { User } from '@/lib/types'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { LoaderCircleIcon } from "lucide-react";
+import { api } from "@/lib/api";
+import { emailSchema } from "@/lib/validation";
+import { useAuth } from "@/app/AuthProvider";
+import type { User } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PasswordInput } from "../components/PasswordInput";
+import { AuthCardHeader, FormAlert } from "../components/StepIndicator";
+import { messageOf } from "../errors";
 
 type LoginResponse = { token: string; user: User }
 
 const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, 'Password is required'),
-})
+  password: z.string().min(1, "Password is required"),
+});
 
-type LoginValues = z.infer<typeof loginSchema>
+type LoginValues = z.infer<typeof loginSchema>;
 
-type LocationState = { from?: string } | null
+type LocationState = { from?: string } | null;
+
+const NETWORK_FALLBACK = "Cannot reach the server. Is it running?";
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -49,18 +54,16 @@ export default function LoginPage() {
       const from = (location.state as LocationState)?.from
       navigate(from && from !== '/login' ? from : '/dashboard', { replace: true })
     } catch (error) {
-      setFormError(
-        error instanceof ApiError ? error.message : 'Cannot reach the server. Is it running?',
-      )
+      setFormError(messageOf(error, NETWORK_FALLBACK))
     }
   }
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">Sign in</h1>
-        <p className="text-sm text-muted-foreground">Use your StockSense account to continue.</p>
-      </div>
+      <AuthCardHeader
+        title="Sign in"
+        description="Use your StockSense account to continue."
+      />
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
         <div className="space-y-1.5">
@@ -79,10 +82,17 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
-          <Input
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="password">Password</Label>
+            <Link
+              to="/forgot-password"
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="current-password"
             placeholder="••••••••"
             aria-invalid={Boolean(errors.password)}
@@ -93,11 +103,7 @@ export default function LoginPage() {
           ) : null}
         </div>
 
-        {formError ? (
-          <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {formError}
-          </p>
-        ) : null}
+        {formError ? <FormAlert>{formError}</FormAlert> : null}
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? <LoaderCircleIcon className="animate-spin" /> : null}
@@ -110,11 +116,6 @@ export default function LoginPage() {
           No account?{' '}
           <Link to="/signup" className="font-medium text-primary hover:underline">
             Create one
-          </Link>
-        </p>
-        <p>
-          <Link to="/forgot-password" className="font-medium text-primary hover:underline">
-            Forgot your password?
           </Link>
         </p>
       </div>
