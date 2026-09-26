@@ -172,8 +172,9 @@ export default function ProductDetailPage() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
+      {/* The total spans both columns on phones so the page is not three screens tall. */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <Card className="col-span-2 sm:col-span-1">
           <CardHeader>
             <CardDescription>Total on hand</CardDescription>
             <CardTitle className="text-2xl">{formatQty(product.onHand, product.uom)}</CardTitle>
