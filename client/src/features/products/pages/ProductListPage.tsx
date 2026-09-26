@@ -112,48 +112,51 @@ export default function ProductListPage() {
           />
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="product-category">Category</Label>
-          <Select
-            value={categoryId ? String(categoryId) : ALL}
-            onValueChange={(value) =>
-              setParams({ categoryId: value === ALL ? null : value, page: null })
-            }
-          >
-            <SelectTrigger id="product-category" className="w-full lg:w-48">
-              <SelectValue placeholder="All categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>All categories</SelectItem>
-              {categories.data?.map((category) => (
-                <SelectItem key={category.id} value={String(category.id)}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Two selects share a row on phones: stacked they push the table off screen. */}
+        <div className="grid grid-cols-2 gap-3 lg:contents">
+          <div className="space-y-1.5">
+            <Label htmlFor="product-category">Category</Label>
+            <Select
+              value={categoryId ? String(categoryId) : ALL}
+              onValueChange={(value) =>
+                setParams({ categoryId: value === ALL ? null : value, page: null })
+              }
+            >
+              <SelectTrigger id="product-category" className="w-full lg:w-48">
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>All categories</SelectItem>
+                {categories.data?.map((category) => (
+                  <SelectItem key={category.id} value={String(category.id)}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="product-warehouse">Warehouse</Label>
-          <Select
-            value={warehouseId ? String(warehouseId) : ALL}
-            onValueChange={(value) =>
-              setParams({ warehouseId: value === ALL ? null : value, page: null })
-            }
-          >
-            <SelectTrigger id="product-warehouse" className="w-full lg:w-48">
-              <SelectValue placeholder="All warehouses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>All warehouses</SelectItem>
-              {warehouses.data?.map((warehouse) => (
-                <SelectItem key={warehouse.id} value={String(warehouse.id)}>
-                  {warehouse.code} — {warehouse.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-1.5">
+            <Label htmlFor="product-warehouse">Warehouse</Label>
+            <Select
+              value={warehouseId ? String(warehouseId) : ALL}
+              onValueChange={(value) =>
+                setParams({ warehouseId: value === ALL ? null : value, page: null })
+              }
+            >
+              <SelectTrigger id="product-warehouse" className="w-full lg:w-48">
+                <SelectValue placeholder="All warehouses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>All warehouses</SelectItem>
+                {warehouses.data?.map((warehouse) => (
+                  <SelectItem key={warehouse.id} value={String(warehouse.id)}>
+                    {warehouse.code} — {warehouse.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
