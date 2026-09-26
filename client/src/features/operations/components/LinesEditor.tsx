@@ -72,7 +72,13 @@ export function LinesEditor({ form, config, sourceLocationId }: LinesEditorProps
                 value={value}
                 onChange={(product) => {
                   const next = [...lines]
-                  next[index] = { ...next[index], ...product }
+                  next[index] = {
+                    ...next[index],
+                    productId: product.id,
+                    productName: product.name,
+                    productSku: product.sku,
+                    productUom: product.uom,
+                  }
                   setLines(next)
                 }}
                 excludeIds={pickedIds.filter((id) => id !== line.productId)}

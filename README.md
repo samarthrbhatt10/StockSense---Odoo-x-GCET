@@ -6,6 +6,18 @@ StockSense is a multi-warehouse inventory management system built in 8 hours for
 
 ---
 
+## Screenshots
+
+| Dashboard | Product detail |
+|---|---|
+| ![Dashboard with KPIs, filters and activity chart](docs/screenshots/dashboard.png) | ![Product detail with stock by location and reorder rules](docs/screenshots/product-detail.png) |
+| **Delivery order (pick / pack / validate)** | **Move history (the stock ledger)** |
+| ![Delivery order with pick and pack checklist](docs/screenshots/delivery.png) | ![Move history filtered to Steel](docs/screenshots/move-history.png) |
+| **Low-stock alerts** | |
+| ![Low stock alerts with Create receipt](docs/screenshots/low-stock.png) | |
+
+---
+
 ## Features mapped to the problem statement
 
 | Requirement from the brief | How StockSense implements it | Where in the app |
@@ -21,11 +33,6 @@ StockSense is a multi-warehouse inventory management system built in 8 hours for
 | **Low-stock alerts** | A top-bar bell with a live count (refreshes every minute). The alerts page lists each product below its per-warehouse minimum or out of stock, with a suggested reorder quantity and a "Create receipt" button that opens a pre-filled receipt. | Bell icon, Products → Low Stock (`/alerts`) |
 | **Multi-warehouse** | Warehouses and their locations (manager CRUD, staff view-only). Reorder rules and references are per warehouse, and every list, KPI and alert can be scoped to one warehouse. | Settings → Warehouses / Locations |
 | **SKU search** | Global search (`Ctrl K` / `⌘K`) finds products by name or SKU and operations by reference or partner, and jumps straight to them. | Search box in the top bar |
-
-### Known issues (fixes pending)
-
-- **Adding a product line by hand in a new receipt, delivery or transfer doesn't stick.** Forms opened with a pre-filled product (the product page's *Receive* / *Deliver* quick actions, the alerts page's *Create receipt*, or `?productId=…&quantity=…&locationId=…`) work. The adjustment form is not affected.
-- **The last step of password reset fails.** The code is sent and verified, but *Update password* is rejected because the verified code isn't sent with the new password. Changing your password from **My Profile** works.
 
 ---
 

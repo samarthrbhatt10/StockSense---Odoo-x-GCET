@@ -87,7 +87,8 @@ export default function ForgotPasswordPage() {
 
   const verify = useMutation({
     mutationFn: (code: string) => api.post<ValidResponse>('/auth/verify-otp', { email, otp: code }),
-    onSuccess: () => {
+    onSuccess: (_data, code) => {
+      setOtp(code)
       setError(null)
       setStep(3)
     },

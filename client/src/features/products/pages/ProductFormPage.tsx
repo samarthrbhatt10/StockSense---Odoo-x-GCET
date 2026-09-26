@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { PageHeader } from '@/components/common'
+import { PageHeader, ErrorState } from '@/components/common'
 import { UomField } from '../components/UomField'
 import { useCreateProduct, useProduct, useUpdateProduct } from '../hooks'
 import {
@@ -133,6 +133,15 @@ export default function ProductFormPage() {
   const warnAboutUom = isEdit && originalUom !== undefined && uom !== originalUom && existing.data
     ? existing.data.onHand > 0 || existing.data.stockByLocation.length > 0
     : false
+
+  if (isEdit && existing.isError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Edit product" backTo="/products" />
+        <ErrorState error={existing.error} onRetry={() => existing.refetch()} />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

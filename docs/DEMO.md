@@ -13,12 +13,6 @@ Exact clicks, and what to say while doing them. Numbers assume a **freshly seede
    - **`WH/OUT/0006`**: a *Ready* delivery of 10 Steel Rods from `WH/Rack A` to BuildRight Infra. We use it in step 5a.
 4. Every **Validate** opens a confirmation dialog that says exactly what will move. Click **Validate** again in the dialog.
 
-> ⚠️ **Known issue (until the operations product-picker fix lands):** picking a product in a *new* receipt, delivery or transfer form doesn't stick. Open those forms from the product page's **Receive** / **Deliver** quick actions, or from the pre-filled URLs below; the product line is then already filled. The adjustment form's picker works.
-> - Receipt: `/operations/receipts/new?productId=2&quantity=50&locationId=1` (Steel Rods × 50 → WH/Stock)
-> - Transfer: `/operations/transfers/new?productId=2&quantity=5&locationId=1` (from WH/Stock)
-> - Delivery: `/operations/deliveries/new?productId=6&quantity=10&locationId=1` (Office Chair from WH/Stock)
->
-> With this workaround a document holds one product, so receive the 20 Office Chairs as a second receipt (`productId=6&quantity=20&locationId=1`).
 
 ---
 
@@ -77,7 +71,7 @@ Exact clicks, and what to say while doing them. Numbers assume a **freshly seede
 ## 5. Safeguards (3:20, 55 s)
 
 **a. A delivery that exceeds stock → clear 409, nothing changes**
-1. **Delivery Orders** → **New Delivery Order**. Source **WH/Rack A**, line **Steel Rods** `25` (available 30) → **Save & confirm** → tick both boxes → **Validate** → Done. Rack A now has **5**. (Picker workaround: `/operations/deliveries/new?productId=2&quantity=25&locationId=2`.)
+1. **Delivery Orders** → **New Delivery Order**. Source **WH/Rack A**, line **Steel Rods** `25` (available 30) → **Save & confirm** → tick both boxes → **Validate** → Done. Rack A now has **5**.
 2. Back to **Delivery Orders** → open **`WH/OUT/0006`** (BuildRight Infra, 10 Steel Rods, *Ready* since yesterday). The line already warns **"5 Units · not enough"**.
 3. Tick **Items picked** + **Items packed** → **Validate** → confirm.
 4. The toast reads: **"Not enough STL-ROD at WH/Rack A: available 5, requested 10"**. The status is still **Ready**; open Steel Rods and nothing moved.
@@ -110,8 +104,6 @@ Exact clicks, and what to say while doing them. Numbers assume a **freshly seede
 2. Show the server terminal: the `EMAIL (StockSense)` block with the **6-digit code**.
    > "No SMTP configured, so emails print to the console. Set SMTP_HOST and the same code goes out by email. Codes are hashed, expire in 10 minutes and allow 5 attempts."
 3. Enter the code → **Verify code** → set a new password → **Update password** → log in with it. (Use the staff account so the manager login stays valid.)
-
-> ⚠️ **Known issue (until the auth fix lands):** **Update password** currently fails with "otp: Enter the 6-digit code", because the page doesn't keep the verified code for the last step. Stop the demo after **Verify code** succeeds and say "then you set the new password".
 
 ---
 
