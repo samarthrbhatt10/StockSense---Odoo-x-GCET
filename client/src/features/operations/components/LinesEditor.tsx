@@ -41,6 +41,10 @@ export function LinesEditor({ form, config, sourceLocationId }: LinesEditorProps
     form.setValue('lines', next, { shouldValidate: true, shouldDirty: true })
   }
 
+  function addLine(): void {
+    setLines([...lines, newLine()])
+  }
+
   function availableFor(productId: number): number | null {
     if (!config.showsAvailability || sourceLocationId === null || productId === 0) return null
     return stock.find((quant) => quant.productId === productId)?.quantity ?? 0
@@ -98,6 +102,12 @@ export function LinesEditor({ form, config, sourceLocationId }: LinesEditorProps
                     next[index] = { ...next[index], quantity: Number.isFinite(parsed) ? parsed : 0 }
                     setLines(next)
                   }}
+                  onKeyDown={(event) => {
+                    // Enter in the last row starts a new one.
+                    if (event.key !== 'Enter' || index !== lines.length - 1) return
+                    event.preventDefault()
+                    addLine()
+                  }}
                   placeholder="0"
                   aria-invalid={Boolean(quantityError)}
                   className="h-8"
@@ -145,7 +155,7 @@ export function LinesEditor({ form, config, sourceLocationId }: LinesEditorProps
         variant="outline"
         size="sm"
         className="w-full gap-1.5"
-        onClick={() => setLines([...lines, newLine()])}
+        onClick={addLine}
       >
         <PlusIcon className="size-4" />
         Add product

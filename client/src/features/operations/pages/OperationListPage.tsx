@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { PlusIcon } from 'lucide-react'
 import { EmptyState, ErrorState, PageHeader, Pagination } from '@/components/common'
 import { Button } from '@/components/ui/button'
@@ -19,9 +19,12 @@ export default function OperationListPage() {
 
 function OperationList({ kind, config }: { kind: OperationKind; config: KindConfig }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { filters, statusTab, page, hasFilters, setStatusTab, setFilters, setPage, clearFilters } =
     useOperationFilters()
   const operations = useOperations(config.type, filters, page)
+  // Detail links carry the list's filters, so "back to list" lands on the same view.
+  const detailUrl = (id: number): string => `/operations/${kind}/${id}${location.search}`
 
   const items = operations.data?.items
   const showEmpty =
@@ -83,7 +86,7 @@ function OperationList({ kind, config }: { kind: OperationKind; config: KindConf
             config={config}
             rows={items}
             isLoading={operations.isPending}
-            onRowClick={(row) => navigate(`/operations/${kind}/${row.id}`)}
+            onRowClick={(row) => navigate(detailUrl(row.id))}
           />
           {operations.data && operations.data.meta.total > 0 ? (
             <Pagination

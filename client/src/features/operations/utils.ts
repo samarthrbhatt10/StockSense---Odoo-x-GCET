@@ -2,7 +2,7 @@ import { ApiError } from '@/lib/api'
 import { formatQty } from '@/lib/format'
 import type { KindConfig } from './kinds'
 import type { OperationFormValues } from './schemas'
-import type { Operation, OperationSummary } from './types'
+import type { Operation, OperationLine, OperationSummary } from './types'
 import type { OperationCreateBody } from './api'
 
 const FIELDS = [
@@ -95,15 +95,22 @@ export function applyServerFieldErrors(
   return applied
 }
 
-function summariseItems(items: { quantity: number }[]): string {
-  const plural = items.length === 1 ? 'product' : 'products'
-  return `${items.length} ${plural} · ${formatQty(items.reduce((sum, item) => sum + item.quantity, 0))}`
-}
-
 /** The list's "From → To" cell. Adjustments have one real location. */
 export function formatRoute(config: KindConfig, row: OperationSummary): string {
   if (config.singleLocation) return row.destLocation.fullName
   return `${row.sourceLocation.fullName} → ${row.destLocation.fullName}`
+}
+
+/** Counted − recorded, the net effect of validating an adjustment line. */
+export function adjustmentDifference(line: OperationLine): number {
+  const recorded = line.available ?? line.quantity
+  return Math.round(((line.countedQuantity ?? 0) - recorded) * 1000) / 1000
+}
+
+/** "Steel: −3 kg at WH/Production Floor" */
+export function formatDifference(value: number, uom: string): string {
+  if (value === 0) return '—'
+  return `${value > 0 ? '+' : '−'}${formatQty(Math.abs(value), uom)}`
 }
 
 /** One line per movement, for the validate confirmation dialog. */
@@ -128,7 +135,10 @@ export function describeValidationEffect(operation: Operation): string[] {
           `Moves ${formatQty(line.quantity, line.product.uom)} of ${line.product.name} from ${from} to ${to}`,
       )
     default:
-      return [`Sets the counted quantities at ${to} (${summariseItems(operation.lines)})`]
+      return operation.lines.map(
+        (line) =>
+          `${line.product.name}: ${formatDifference(adjustmentDifference(line), line.product.uom)} at ${to}`,
+      )
   }
 }
 

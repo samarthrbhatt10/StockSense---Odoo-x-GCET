@@ -56,3 +56,34 @@ export function buildOperationFormSchema(config: KindConfig) {
     }
   })
 }
+
+// ---------------------------------------------------------------------------
+// Adjustments: counted quantity per line, one counted location (CONTRACT §3)
+// ---------------------------------------------------------------------------
+
+export const adjustmentLineFormSchema = z.object({
+  productId: z.number().int().positive('Select a product'),
+  productName: z.string(),
+  productSku: z.string(),
+  productUom: z.string(),
+  countedQuantity: z.number().min(0, 'Counted quantity cannot be negative'),
+})
+
+const baseAdjustmentFormSchema = z.object({
+  destLocationId: z.number().int().positive().nullable(),
+  scheduledDate: z.string().min(1, 'Scheduled date is required'),
+  notes: z.string().trim().max(500, 'At most 500 characters'),
+  lines: z.array(adjustmentLineFormSchema).min(1, 'Add at least one product').max(100, 'At most 100 lines'),
+})
+
+export type AdjustmentFormValues = z.infer<typeof baseAdjustmentFormSchema>
+
+export const adjustmentFormSchema = baseAdjustmentFormSchema.superRefine((values, ctx) => {
+  if (!values.destLocationId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['destLocationId'],
+      message: 'Counted location is required',
+    })
+  }
+})

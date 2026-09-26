@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useLocation, useParams } from 'react-router'
 import { ArrowLeftIcon, ArrowRightIcon, HistoryIcon } from 'lucide-react'
 import { DataTable, ErrorState, StatusBadge, type Column } from '@/components/common'
 import { Badge } from '@/components/ui/badge'
@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import NotFoundPage from '@/app/NotFoundPage'
 import { formatDate, formatDateTime, formatQty } from '@/lib/format'
 import type { OperationKind } from '@/lib/types'
+import { AdjustmentLines } from '../components/AdjustmentLines'
 import { OperationActions } from '../components/OperationActions'
 import { OperationLinesTable } from '../components/OperationLinesTable'
 import { StatusStepper } from '../components/StatusStepper'
@@ -108,7 +109,10 @@ function OperationDetail({
   id: number
 }) {
   const operation = useOperation(id)
+  const location = useLocation()
   const [checklist, setChecklist] = useState({ picked: false, packed: false })
+  // The list's own filters travel in the URL, so "back" returns to the same view.
+  const listUrl = `/operations/${kind}${location.search}`
 
   if (operation.isPending) {
     return (
@@ -130,7 +134,7 @@ function OperationDetail({
     <div className="space-y-6">
       <div className="space-y-2 border-b border-border pb-5">
         <Link
-          to={`/operations/${kind}`}
+          to={listUrl}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeftIcon className="size-4" />
@@ -189,7 +193,7 @@ function OperationDetail({
         </Card>
 
         {hasActions ? (
-          <Card>
+          <Card className="sticky bottom-0 z-10 rounded-b-none shadow-lg md:static md:rounded-xl md:shadow-none">
             <CardHeader>
               <CardTitle>Actions</CardTitle>
             </CardHeader>
@@ -208,10 +212,14 @@ function OperationDetail({
 
       <Card>
         <CardHeader>
-          <CardTitle>Lines</CardTitle>
+          <CardTitle>{config.singleLocation ? 'Counted products' : 'Lines'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <OperationLinesTable operation={data} config={config} />
+          {config.singleLocation ? (
+            <AdjustmentLines operation={data} />
+          ) : (
+            <OperationLinesTable operation={data} config={config} />
+          )}
         </CardContent>
       </Card>
 
