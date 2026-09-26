@@ -29,12 +29,6 @@ A modular Inventory Management System (IMS) designed to digitize and streamline 
 
 ---
 
-## ⚙️ Getting Started
-
-### Prerequisites
-* Node.js (v18 or higher)
-* MongoDB database instance (Local or Atlas)
-
 ### Installation
 
 1. **Clone the repository**
