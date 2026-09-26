@@ -54,7 +54,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
     return;
   }
   const appError = toAppError(err);
-  if (appError.status >= 500) console.error(err);
+  if (appError.status === 500) console.error(err);
 
   res.status(appError.status).json({
     error: {
