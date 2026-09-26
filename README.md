@@ -29,15 +29,6 @@ A modular Inventory Management System (IMS) designed to digitize and streamline 
 
 ---
 
-## 🛠️ Tech Stack
-
-* **Frontend**: React.js / Next.js, Tailwind CSS
-* **Backend**: Node.js, Express.js
-* **Database**: MongoDB (MERN Stack Architecture)
-* **Authentication**: JWT, OTP Verification Service
-
----
-
 ## ⚙️ Getting Started
 
 ### Prerequisites
