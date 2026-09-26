@@ -10,11 +10,14 @@ type PasswordRulesProps = {
 /** Live checklist of the server's password rules. */
 export function PasswordRules({ value, className }: PasswordRulesProps) {
   const results = passwordRuleResults(value);
+  // An empty field has satisfied nothing yet, and "at most 72 characters" would
+  // otherwise tick itself green before a single key has been pressed.
+  const pending = value.length === 0;
 
   return (
     <ul className={cn("space-y-1", className)}>
       {PASSWORD_RULES.map((rule, index) => {
-        const passed = results[index] ?? false;
+        const passed = !pending && (results[index] ?? false);
         return (
           <li
             key={rule}
