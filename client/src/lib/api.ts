@@ -106,7 +106,8 @@ async function parseError(response: Response, path: string): Promise<ApiError> {
   return error
 }
 
-async function request<T>(method: string, path: string, body?: unknown, params?: QueryParams): Promise<T> {
+/** Performs the request and turns any non-2xx or transport failure into an ApiError. */
+async function send(method: string, path: string, body?: unknown, params?: QueryParams): Promise<Response> {
   const hasBody = body !== undefined
   let response: Response
   try {
@@ -120,16 +121,40 @@ async function request<T>(method: string, path: string, body?: unknown, params?:
   }
 
   if (!response.ok) throw await parseError(response, path)
+  return response
+}
 
-  if (response.status === 204) return null as T
-
-  let payload: unknown
+async function readJson(response: Response): Promise<{ data?: unknown; meta?: ListMeta }> {
   try {
-    payload = await response.json()
+    return (await response.json()) as { data?: unknown; meta?: ListMeta }
   } catch {
-    return null as T
+    return {}
   }
-  return (payload as { data: T }).data
+}
+
+async function request<T>(method: string, path: string, body?: unknown, params?: QueryParams): Promise<T> {
+  const response = await send(method, path, body, params)
+  if (response.status === 204) return null as T
+  const payload = await readJson(response)
+  return payload.data as T
+}
+
+/**
+ * Lists answer `{ data: items, meta }`, so `meta` sits beside `data` rather than
+ * inside it. Without this the pagination meta would be thrown away.
+ */
+async function requestList<T>(
+  path: string,
+  params?: QueryParams,
+): Promise<{ items: T[]; meta: ListMeta }> {
+  const payload = await readJson(await send('GET', path, undefined, params))
+  const items = Array.isArray(payload.data) ? (payload.data as T[]) : []
+  const meta: ListMeta = payload.meta ?? {
+    total: items.length,
+    page: 1,
+    pageSize: items.length,
+  }
+  return { items, meta }
 }
 
 export const api = {
@@ -137,7 +162,7 @@ export const api = {
     return request<T>('GET', path, undefined, params)
   },
   list<T>(path: string, params?: QueryParams): Promise<{ items: T[]; meta: ListMeta }> {
-    return request<{ items: T[]; meta: ListMeta }>('GET', path, undefined, params)
+    return requestList<T>(path, params)
   },
   post<T>(path: string, body?: unknown): Promise<T> {
     return request<T>('POST', path, body)
