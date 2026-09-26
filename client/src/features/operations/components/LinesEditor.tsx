@@ -29,6 +29,7 @@ function newLine(): OperationFormValues['lines'][number] {
 export function LinesEditor({ form, config, sourceLocationId }: LinesEditorProps) {
   const lines = form.watch('lines')
   const errors = form.formState.errors
+  const submitted = form.formState.submitCount > 0
 
   const { data: stock = [] } = useLookupStock(
     { locationId: sourceLocationId ?? undefined },
@@ -55,7 +56,8 @@ export function LinesEditor({ form, config, sourceLocationId }: LinesEditorProps
       {lines.map((line, index) => {
         const available = availableFor(line.productId)
         const short = available !== null && line.quantity > available
-        const productError = line.productId === 0 ? 'Select a product' : undefined
+        // Only after a save attempt, so a freshly added line doesn't start out red.
+        const productError = submitted && line.productId === 0 ? 'Select a product' : undefined
         const quantityError = line.productId === 0 ? undefined : line.quantity > 0 ? undefined : 'Must be more than 0'
         const value: PickedProduct | null =
           line.productId === 0

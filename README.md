@@ -210,11 +210,8 @@ Inside `server/`: `db:studio` (Prisma Studio), `db:migrate`, `db:seed`, `typeche
 
 ```
 .
-├── AGENTS.md / CLAUDE.md      # rules for AI coding agents
 ├── docs/
-│   ├── CONTRACT.md            # the frozen shared contract (API, data semantics, routes)
-│   ├── DEMO.md                # 5-minute demo script
-│   └── prompts/               # per-person task prompts
+│   └── screenshots/           # images used in this README
 ├── server/
 │   ├── prisma/                # schema.prisma, migrations, seed.ts
 │   └── src/
@@ -247,9 +244,9 @@ Inside `server/`: `db:studio` (Prisma Studio), `db:migrate`, `db:seed`, `typeche
 | **Person 2** (Samarth) | Operations: receipts, deliveries, transfers, adjustments, and the workflow and validation. |
 | **Person 3** (Anshul) | Dashboard, move history, low-stock alerts and bell, global search, README and demo. Built the **server foundation** (schema, seed, `applyMoves`, stock status). |
 
-- **Frozen shared contract first.** Before feature work, the foundation was built and frozen: schema, seed, the shared server lib, the client shell, and `docs/CONTRACT.md` (endpoints, error codes, routes, query keys and cross-feature URLs). After that, nobody edited shared files. Changes went through "contract change requests" applied only at checkpoints.
+- **Frozen shared contract first.** Before feature work, the foundation was built and frozen: schema, seed, the shared server lib, the client shell, and a written shared contract (endpoints, error codes, routes, query keys and cross-feature URLs). After that, nobody edited shared files. Changes went through "contract change requests" applied only at checkpoints.
 - **One branch per person** (`p1/*`, `p2/*`, `p3/*`), with **strict folder ownership**. Features never import each other; they link through agreed URLs such as `/operations/receipts/new?productId=…&quantity=…`. This kept merges into `main` at each checkpoint conflict-free.
-- **AI coding agents** implemented each task from a written prompt (`docs/prompts/`) under the rules in `AGENTS.md`: stay in your folders, validate everything, stock changes only through `applyMoves`, `npm run check` must pass. **A human reviewed every diff** and ran the app before each commit and merge.
+- **AI coding agents** implemented each task from a written prompt under shared agent rules: stay in your folders, validate everything, stock changes only through `applyMoves`, `npm run check` must pass. **A human reviewed every diff** and ran the app before each commit and merge.
 
 ---
 

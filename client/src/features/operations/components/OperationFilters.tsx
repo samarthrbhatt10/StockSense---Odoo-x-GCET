@@ -11,7 +11,7 @@ import { STATUS_TABS, type StatusTab } from '../hooks'
 const ALL = 'all'
 
 type OperationFiltersProps = {
-  statusTab: StatusTab
+  statusTab: StatusTab | null
   onStatusTabChange: (tab: StatusTab) => void
   warehouseId: number | undefined
   onWarehouseChange: (warehouseId: number | undefined) => void
@@ -86,7 +86,7 @@ export function OperationFilters({
     <div className="space-y-3">
       <div className="-mx-1 overflow-x-auto px-1 pb-1">
         <Tabs
-          value={statusTab}
+          value={statusTab ?? ''}
           onValueChange={(value) => onStatusTabChange(value as StatusTab)}
           className="gap-0"
         >

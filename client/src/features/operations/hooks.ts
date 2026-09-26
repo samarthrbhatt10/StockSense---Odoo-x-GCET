@@ -59,14 +59,14 @@ export function parseStatusParam(value: string | undefined): OperationStatus[] |
   return unique.length > 0 ? unique : undefined
 }
 
-/** The tab that matches the `status` param; `All` also covers unknown combos. */
-export function statusTabFromParam(value: string | undefined): StatusTab {
+/** The tab that matches the `status` param, or null when the combo has no tab of its own. */
+export function statusTabFromParam(value: string | undefined): StatusTab | null {
   const statuses = parseStatusParam(value)
   if (!statuses) return 'ALL'
   if (statuses.length === PENDING_STATUSES.length && PENDING_STATUSES.every((s) => statuses.includes(s))) {
     return 'PENDING'
   }
-  return statuses.length === 1 ? statuses[0] : 'ALL'
+  return statuses.length === 1 ? statuses[0] : null
 }
 
 export type OperationFilterPatch = {
@@ -76,7 +76,7 @@ export type OperationFilterPatch = {
 
 export function useOperationFilters(): {
   filters: OperationFilters
-  statusTab: StatusTab
+  statusTab: StatusTab | null
   page: number
   hasFilters: boolean
   setStatusTab: (tab: StatusTab) => void
